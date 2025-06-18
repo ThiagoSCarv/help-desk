@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  client
+  technician 
+  admin
+}
+
+enum Status {
+  open 
+  in_progress
+  closed
+}
+
+model Users {
+  id String @id @default(uuid())
+  name String
+  email String @unique
+  password String 
+  role Role @default(client)
+  avatarUrl String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  schedules TechnicianSchedule[]
+  tickets Ticket[] @relation("ClientTickets")
+  assignedJobs Ticket[] @relation("TechnicianTickets")
+  addedServices TicketService[] @relation("ServiceAddedBy")
+
+  @@map("users")
+}
+
+model TechnicianSchedule {
+  id String @id @default(uuid())
+  technician String
+  availableHours String
+
+  technicianId Users @relation(fields: [technician], references: [id])  
+
+  @@map("technician_schedule")
+}
+
+model Service {
+  id String @id @default(uuid())
+  name String
+  price Decimal
+  isActive Boolean @default(true)
+  ticketLinks TicketService[]
+}
+
+model Ticket {
+  id String @id @default(uuid())
+  clientId String @map("client_id")
+  technicianId String @map("technician_id")
+  status Status @default(open)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  closedAt DateTime?
+
+  client Users @relation("ClientTickets", fields: [clientId], references: [id])
+  technician Users @relation("TechnicianTickets", fields: [technicianId], references: [id])
+  services TicketService[]
+
+  @@map("ticket")
+}
+
+model TicketService {
+  id String @id @default(uuid())
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  ticketId String
+  service Service @relation(fields: [serviceId], references: [id])
+  serviceId String
+  addedBy Users @relation("ServiceAddedBy", fields: [addedById], references: [id])
+  addedById String
+  price Decimal
+}
