@@ -6,15 +6,17 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
-    "dev": "tsx watch sr c/server.ts"
+    "dev": "tsx watch --env-file .env src/server.ts",
+    "test:dev": "cross-env NODE_OPTIONS=--experimental-vm-modules npx jest --watchAll --runInBand",
+    "build": "tsup src --out-dir build",
+    "start": "node build/server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@prisma/client": "^6.9.0",
+    "@prisma/client": "^6.10.1",
     "@types/supertest": "^6.0.2",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
