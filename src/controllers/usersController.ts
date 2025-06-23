@@ -83,6 +83,10 @@ export class UsersControllers {
 
       const user = await prisma.users.findFirst({ where: { id } })
 
+      if (!user) {
+        throw new AppError('user not exists')
+      }
+
       if (userWithSameEmail) {
         throw new AppError('User with same email already exists')
       }
@@ -95,7 +99,8 @@ export class UsersControllers {
         throw new AppError('unauthorized', 401)
       }
 
-      let hashedPassword;
+      // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
+      let hashedPassword
 
       if (password) {
         hashedPassword = await hash(password, 8)
@@ -106,7 +111,29 @@ export class UsersControllers {
         data: { name, email, password: hashedPassword },
       })
 
-      return response.json({ name, email, hashedPassword})
+      return response.status(200).json({ name, email, hashedPassword })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async remove(request: Request, response: Response, next: NextFunction) {
+    try {
+      const paramsSchema = z.object({
+        id: z.string().uuid({ message: 'this id is not valid' }),
+      })
+
+      const { id } = paramsSchema.parse(request.params)
+
+      const user = await prisma.users.findFirst({ where: { id } })
+
+      if (!user) {
+        throw new AppError('user not exists')
+      }
+
+      await prisma.users.delete({ where: { id } })
+
+      return response.status(200).json()
     } catch (error) {
       next(error)
     }

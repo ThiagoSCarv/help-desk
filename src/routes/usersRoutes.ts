@@ -14,3 +14,9 @@ usersRoutes.get(
   usersController.index
 )
 usersRoutes.put('/:id', ensureAuthenticated, usersController.update)
+usersRoutes.delete(
+  '/:id',
+  ensureAuthenticated,
+  verifyUserAuthorization(['admin']),
+  usersController.remove
+)
