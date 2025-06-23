@@ -40,9 +40,73 @@ export class UsersControllers {
     }
   }
 
+  async index(request: Request, response: Response, next: NextFunction) {
+    try {
+      const users = await prisma.users.findMany()
+
+      return response.json({ users })
+    } catch (error) {
+      next(error)
+    }
+  }
+
   async update(request: Request, response: Response, next: NextFunction) {
     try {
-      return response.json({ message: 'ok' })
+      const paramsSchema = z.object({
+        id: z.string().uuid(),
+      })
+
+      const { id } = paramsSchema.parse(request.params)
+
+      const bodySchema = z.object({
+        name: z
+          .string()
+          .min(3, { message: 'Name must have at least 3 letters' }),
+        email: z.string().email(),
+        password: z
+          .string()
+          .min(6, { message: 'Password must to have at least 6 digits' })
+          .optional(),
+        newPassword: z
+          .string()
+          .min(6, { message: 'Password must to have at least 6 digits' })
+          .optional(),
+      })
+
+      const { name, email, password, newPassword } = bodySchema.parse(
+        request.body
+      )
+
+      const userWithSameEmail = await prisma.users.findFirst({
+        where: { email },
+      })
+
+      const user = await prisma.users.findFirst({ where: { id } })
+
+      if (userWithSameEmail) {
+        throw new AppError('User with same email already exists')
+      }
+
+      if (password && password !== newPassword) {
+        throw new AppError('the passwords are different')
+      }
+
+      if (request.user?.role !== 'admin' && user?.id !== request.user?.id) {
+        throw new AppError('unauthorized', 401)
+      }
+
+      let hashedPassword;
+
+      if (password) {
+        hashedPassword = await hash(password, 8)
+      }
+
+      await prisma.users.update({
+        where: { id },
+        data: { name, email, password: hashedPassword },
+      })
+
+      return response.json({ name, email, hashedPassword})
     } catch (error) {
       next(error)
     }

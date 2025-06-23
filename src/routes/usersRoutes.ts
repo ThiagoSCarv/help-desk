@@ -4,12 +4,13 @@ import { verifyUserAuthorization } from '@/middlewares/verifyUserAuthorization'
 import { Router } from 'express'
 
 export const usersRoutes = Router()
-const usersController = new UsersControllers();
+const usersController = new UsersControllers()
 
 usersRoutes.post('/', usersController.create)
-usersRoutes.put(
+usersRoutes.get(
   '/',
   ensureAuthenticated,
-  verifyUserAuthorization(['admin', 'technician', 'client']),
-  usersController.update
+  verifyUserAuthorization(['admin']),
+  usersController.index
 )
+usersRoutes.put('/:id', ensureAuthenticated, usersController.update)

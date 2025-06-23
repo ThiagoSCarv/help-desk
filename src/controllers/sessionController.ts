@@ -13,12 +13,12 @@ class SessionController {
     try {
       const bodySchema = z.object({
         email: z.string().email({ message: 'please use a valid e-mail' }),
-        password: z
+        userPassword: z
           .string()
           .min(6, { message: 'password must have at least 6 digits' }),
       })
 
-      const { email, password } = bodySchema.parse(request.body)
+      const { email, userPassword } = bodySchema.parse(request.body)
 
       const user = await prisma.users.findFirst({ where: { email } })
 
@@ -28,7 +28,7 @@ class SessionController {
 
       const hashedPassword = user.password
 
-      const isValidPassword = await compare(password, hashedPassword)
+      const isValidPassword = await compare(userPassword, hashedPassword)
 
       if (!isValidPassword) {
         throw new AppError('invalid email or password', 401)
@@ -41,7 +41,9 @@ class SessionController {
         subject: String(user.id),
       })
 
-      return response.status(201).json({ token })
+      const { password, ...userWithoutPassword } = user
+
+      return response.status(201).json({ token, userWithoutPassword })
     } catch (error) {
       next(error)
     }
