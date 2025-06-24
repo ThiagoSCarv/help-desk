@@ -20,6 +20,7 @@
     "@types/supertest": "^6.0.2",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
+    "dayjs": "^1.11.13",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.1",
     "prisma": "^6.9.0",

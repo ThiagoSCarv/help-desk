@@ -15,9 +15,10 @@ export class UsersControllers {
         password: z
           .string()
           .min(6, { message: 'Password must to have at least 6 digits' }),
+        role: z.enum(["client", "technician", "admin"]).default('client').optional(),
       })
 
-      const { name, email, password } = bodySchema.parse(request.body)
+      const { name, email, password, role } = bodySchema.parse(request.body)
 
       const userWithSameEmail = await prisma.users.findFirst({
         where: { email },
@@ -30,7 +31,7 @@ export class UsersControllers {
       const hashedPassword = await hash(password, 8)
 
       const userWithoutPassword = await prisma.users.create({
-        data: { name, email, password: hashedPassword },
+        data: { name, email, password: hashedPassword, role },
       })
 
       return response.status(201).json(userWithoutPassword)
@@ -71,11 +72,11 @@ export class UsersControllers {
           .string()
           .min(6, { message: 'Password must to have at least 6 digits' })
           .optional(),
+        avatarUrl: z.string().min(20).optional(),
       })
 
-      const { name, email, password, newPassword } = bodySchema.parse(
-        request.body
-      )
+      const { name, email, password, newPassword, avatarUrl } =
+        bodySchema.parse(request.body)
 
       const userWithSameEmail = await prisma.users.findFirst({
         where: { email },
@@ -108,7 +109,7 @@ export class UsersControllers {
 
       await prisma.users.update({
         where: { id },
-        data: { name, email, password: hashedPassword },
+        data: { name, email, password: hashedPassword, avatarUrl },
       })
 
       return response.status(200).json({ name, email, hashedPassword })
@@ -120,7 +121,7 @@ export class UsersControllers {
   async remove(request: Request, response: Response, next: NextFunction) {
     try {
       const paramsSchema = z.object({
-        id: z.string().uuid({ message: 'this id is not valid' }),
+        id: z.string().uuid({ message: 'Esse id não é valido' }),
       })
 
       const { id } = paramsSchema.parse(request.params)
@@ -128,7 +129,11 @@ export class UsersControllers {
       const user = await prisma.users.findFirst({ where: { id } })
 
       if (!user) {
-        throw new AppError('user not exists')
+        throw new AppError('Usuario não encontrado')
+      }
+
+      if (user.role === 'admin') {
+        throw new AppError('Usuario não pode ser deletado')
       }
 
       await prisma.users.delete({ where: { id } })
