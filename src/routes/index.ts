@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { servicesRoutes } from './servicesRoutes'
 import { sessionRoutes } from './sessionRoutes'
 import { technicianScheduleRoutes } from './technicianScheduleRotes'
 import { uploadsRoutes } from './uploadsRoutes'
@@ -10,3 +11,4 @@ routes.use('/users', usersRoutes)
 routes.use('/sessions', sessionRoutes)
 routes.use('/uploads', uploadsRoutes)
 routes.use('/technicianSchedule', technicianScheduleRoutes)
+routes.use('/services', servicesRoutes)

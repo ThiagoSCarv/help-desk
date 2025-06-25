@@ -115,6 +115,14 @@ class TechnicianScheduleController {
 
       const { availableHours } = bodySchema.parse(request.body)
 
+      const schedule = await prisma.technicianSchedule.findFirst({
+        where: { id },
+      })
+
+      if (!schedule) {
+        throw new AppError('Horario de atendimento não encontrado')
+      }
+
       await prisma.technicianSchedule.update({
         data: { availableHours },
         where: { id: id },
