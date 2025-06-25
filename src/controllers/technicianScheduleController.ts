@@ -10,7 +10,27 @@ class TechnicianScheduleController {
     try {
       const bodySchema = z.object({
         technician: z.string().uuid(),
-        availableHours: z.string(),
+        availableHours: z
+          .enum([
+            'H07_00',
+            'H08_00',
+            'H09_00',
+            'H10_00',
+            'H11_00',
+            'H12_00',
+            'H13_00',
+            'H14_00',
+            'H15_00',
+            'H16_00',
+            'H17_00',
+            'H18_00',
+            'H19_00',
+            'H20_00',
+            'H21_00',
+            'H22_00',
+            'H23_00',
+          ])
+          .array(),
       })
 
       const { technician, availableHours } = bodySchema.parse(request.body)
@@ -19,26 +39,18 @@ class TechnicianScheduleController {
         where: { id: technician },
       })
 
-      const alreadySchedule = await prisma.technicianSchedule.findFirst({
-        where: { availableHours },
-      })
-
       if (!isTechnician || isTechnician?.role !== 'technician') {
         throw new AppError('Técnico não encontrado')
       }
 
-      if (alreadySchedule) {
-        throw new AppError('Horário de atendimento já está agendado')
-      }
-
-      const newSchedule = await prisma.technicianSchedule.create({
+      await prisma.technicianSchedule.create({
         data: {
           technician: technician,
           availableHours,
         },
       })
 
-      return response.status(201).json({ technician, newSchedule })
+      return response.status(201).json({ technician, availableHours })
     } catch (error) {
       next(error)
     }
@@ -61,10 +73,54 @@ class TechnicianScheduleController {
       const technicianSchedule = await prisma.technicianSchedule.findMany({
         where: { technician: id },
         orderBy: { availableHours: 'asc' },
-        select: { availableHours: true, technician: false },
       })
 
       return response.json({ technicianSchedule })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async update(request: Request, response: Response, next: NextFunction) {
+    try {
+      const paramsSchema = z.object({
+        id: z.string().uuid(),
+      })
+
+      const { id } = paramsSchema.parse(request.params)
+
+      const bodySchema = z.object({
+        availableHours: z
+          .enum([
+            'H07_00',
+            'H08_00',
+            'H09_00',
+            'H10_00',
+            'H11_00',
+            'H12_00',
+            'H13_00',
+            'H14_00',
+            'H15_00',
+            'H16_00',
+            'H17_00',
+            'H18_00',
+            'H19_00',
+            'H20_00',
+            'H21_00',
+            'H22_00',
+            'H23_00',
+          ])
+          .array(),
+      })
+
+      const { availableHours } = bodySchema.parse(request.body)
+
+      await prisma.technicianSchedule.update({
+        data: { availableHours },
+        where: { id: id },
+      })
+
+      return response.json({ availableHours })
     } catch (error) {
       next(error)
     }

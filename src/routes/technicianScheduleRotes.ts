@@ -12,5 +12,6 @@ technicianScheduleRoutes.use(
 )
 technicianScheduleRoutes.post('/', technicianScheduleController.create)
 technicianScheduleRoutes.get('/:id', technicianScheduleController.show)
+technicianScheduleRoutes.put('/:id', technicianScheduleController.update)
 
 export { technicianScheduleRoutes }

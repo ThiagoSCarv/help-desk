@@ -26,6 +26,27 @@ enum Status {
   closed
 }
 
+enum Hour {
+  H07_00
+  H08_00
+  H09_00
+  H10_00
+  H11_00
+  H12_00
+  H13_00
+  H14_00
+  H15_00
+  H16_00
+  H17_00
+  H18_00
+  H19_00
+  H20_00
+  H21_00
+  H22_00
+  H23_00
+}
+
+
 model Users {
   id String @id @default(uuid())
   name String
@@ -45,11 +66,11 @@ model Users {
 }
 
 model TechnicianSchedule {
-  id String @id @default(uuid())
-  technician String
-  availableHours String
+  id             String   @id @default(uuid())
+  technician     String
+  availableHours Hour[]
 
-  technicianId Users @relation(fields: [technician], references: [id])  
+  technicianId   Users    @relation(fields: [technician], references: [id])  
 
   @@map("technician_schedule")
 }
