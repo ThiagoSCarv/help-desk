@@ -78,7 +78,7 @@ model TechnicianSchedule {
 model Service {
   id String @id @default(uuid())
   name String
-  price Decimal
+  price Float
   isActive Boolean @default(true)
   ticketLinks TicketService[]
 }
@@ -107,5 +107,5 @@ model TicketService {
   serviceId String
   addedBy Users @relation("ServiceAddedBy", fields: [addedById], references: [id])
   addedById String
-  price Decimal
+  price Float
 }

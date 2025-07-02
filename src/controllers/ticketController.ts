@@ -3,8 +3,8 @@ import { AppError } from '@/utils/appError'
 import { HOUR_LABELS } from '@/utils/hourLabels'
 import dayjs from 'dayjs'
 import type { NextFunction, Request, Response } from 'express'
-import { datetimeRegex, z } from 'zod'
-import { date } from 'zod/v4'
+import { z } from 'zod'
+import { includes, number } from 'zod/v4'
 import { id } from 'zod/v4/locales'
 
 class TicketController {
@@ -56,9 +56,36 @@ class TicketController {
 
   async index(request: Request, response: Response, next: NextFunction) {
     try {
-      const tickets = await prisma.ticket.findMany()
+      const userId = request.user?.id
 
-      return response.json(tickets)
+      const whereClause =
+        request.user?.role === 'admin'
+          ? undefined
+          : {
+              OR: [{ clientId: userId }, { technicianId: userId }],
+            }
+
+      const tickets = await prisma.ticket.findMany({
+        where: whereClause,
+        include: {
+          services: { select: { price: true } },
+        },
+      })
+
+      const enrichedTickets = tickets.map((ticket) => {
+        const total = ticket.services.reduce(
+          (sum, service) => sum + service.price,
+          0
+        )
+        return {
+          ...ticket,
+          totalSpent: total,
+        }
+      })
+
+      return response.json({
+        tickets: enrichedTickets,
+      })
     } catch (error) {
       next(error)
     }
@@ -103,6 +130,39 @@ class TicketController {
       })
 
       return response.json({ ticketUpdate })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async show(request: Request, response: Response, next: NextFunction) {
+    try {
+      const paramsSchema = z.object({
+        id: z.string().uuid(),
+      })
+
+      const { id } = paramsSchema.parse(request.params)
+
+      const ticket = await prisma.ticket.findFirst({
+        where: { id },
+        include: {
+          services: { select: { price: true } },
+        },
+      })
+
+      if (!ticket) {
+        throw new AppError('Chamado não encontrado')
+      }
+
+      const totalSpent = ticket.services.reduce(
+        (sum, service) => sum + service.price,
+        0
+      )
+
+      return response.json({
+        ...ticket,
+        totalSpent,
+      })
     } catch (error) {
       next(error)
     }

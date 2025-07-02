@@ -14,7 +14,6 @@ ticketRoutes.post(
 )
 ticketRoutes.get(
   '/',
-  verifyUserAuthorization(['admin']),
   ticketController.index
 )
 ticketRoutes.patch(
@@ -22,5 +21,6 @@ ticketRoutes.patch(
   verifyUserAuthorization(['technician', 'admin']),
   ticketController.update
 )
+ticketRoutes.get('/:id', ticketController.show)
 
 export { ticketRoutes }
